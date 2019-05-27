@@ -1,0 +1,104 @@
+---
+
+- name: IHM - SRE/DevOps tools
+  become: True
+  hosts: localhost
+  pre_tasks:
+    - name: update repositories
+      apt: update_cache=yes
+      changed_when: False
+  tasks:
+  - name: Instalando pacotes
+    apt:
+      name= {{item}}
+    with_items:
+      - git
+      - vim
+      - python
+      - python3
+      - pip
+    #when: ansible_facts['os_family'] == "Debian"
+  - name: Adding Jenkins repo key
+    apt_key:
+      url: https://pkg.jenkins.io/debian-stable/jenkins.io.key
+      state: present
+  - name: Adding jenkins repository
+    apt_repository:
+      repo: deb https://pkg.jenkins.io/debian-stable binary/
+      state: present
+  - name: Installing Jenkins
+    apt:
+      name: jenkins
+  - name: Activating Jenkins
+    systemd:
+      name: jenkins
+      enabled: yes
+  - name: Adding Atom repo
+    apt_repository:
+      repo: ppa:nginx/stable
+  - name: Installing Atom
+    apt:
+      name: atom
+  - name: Installing Google Chrome
+    apt:
+      deb: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+  - name: Installing Rundeck
+    apt:
+      deb: https://dl.bintray.com/rundeck/rundeck-deb/rundeck_3.0.19.20190327-1.201903272311_all.deb
+  - name: Activating Rundeck
+    systemd:
+      name: rundeckd
+      enabled: yes
+  - name: "Adding Firefox repo"
+    apt_repository:
+      repo: ppa:mozillateam/firefox-next
+  - name: "Installing Firefox"
+    apt:
+      name: firefox
+      state: present
+  - name: Installing python modules
+    pip:
+      name:
+        - requests
+        - urllib3
+        - elasticsearch
+        - numpy
+        - boto3
+        - awscli
+  - name: Removing old versions of Docker
+    apt:
+      name={{ item }}
+      state=absent
+    with_items:
+      - docker
+      - docker-engine
+      - docker.io
+      - containerd
+      - runc
+  - name: Installing docker dependencies
+    apt:
+      name={{item}}
+      state=present
+    with_items:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg-agent
+      - software-properties-common
+  - name: Add Docker GPG key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+  - name: Adding Docker APT repository
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable
+  - name: Installing Docker
+    apt:
+      name=docker-ce
+  - name: Downloading Go installer
+    get_url:
+      url: https://storage.googleapis.com/golang/getgo/installer_linux
+      dest: /tmp/
+      mode: 0777
+  - name: Executing Go installer
+    script: /tmp/installer_linux
