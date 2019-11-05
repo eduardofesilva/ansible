@@ -2,3 +2,5 @@ draft.yml
 .idea/
 *.iml
 *.xml
+env/
+.vscode/
